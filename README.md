@@ -3,14 +3,11 @@
 
 ## Basic Usage
 
-1.  Place the `Meteor` folder into your executor's workspace/autoexec folder (or equivalent).
-2.  Execute the `loader.lua` script:
-    ```lua
-    loadfile("Meteor/loader.lua")()
-    -- or equivalent function provided by your executor
+•  Execute the `loader.lua` script:
+    ```lua loadstring(game:HttpGet("https://raw.githubusercontent.com/LiesInTheDarkness/MeteorForRoblox/refs/heads/main/loader.lua"))():
     ```
-3.  The loader will handle downloading necessary files (if they don't exist or an update is found) and then execute `main.lua` to initialize the GUI.
-4.  By default, press `RightShift` (or tap the top-right "Meteor" button if it appears) to open/close the GUI.
+•  The loader will handle downloading necessary files (if they don't exist or an update is found) and then execute `main.lua` to initialize the GUI.
+•  By default, press `RightShift` (or tap the top-right "Meteor" button if it appears) to open/close the GUI.
 
 ## Development
 
