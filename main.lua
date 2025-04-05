@@ -1,4 +1,5 @@
 -- main.lua
+-- Orchestrates Meteor loading, runs scripts, handles core logic (non-UI)
 
 repeat task.wait() until game:IsLoaded()
 
