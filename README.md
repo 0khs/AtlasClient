@@ -1,6 +1,23 @@
 # Meteor Client 
 *For Roblox*
 
+# Meteor for Roblox
+
+A basic GUI library framework designed for use within Roblox executor environments.
+
+## Description
+
+Meteor provides a foundation for creating in-game user interfaces (GUIs) to control scripts and cheats. It features:
+
+*   A dynamic loading system (`loader.lua`) that can fetch updates from GitHub.
+*   A core GUI client (`MeteorClient.lua`) providing UI elements (Buttons, Toggles, Sliders, TextBoxes) and management.
+*   Support for universal scripts (`games/universal.lua`) that run in any game.
+*   Support for game-specific scripts (`games/<PlaceId>.lua`).
+*   Basic configuration saving/loading.
+*   Designed with mobile compatibility in mind using standard Roblox UI instances.
+
+## File Structure
+
 ## Basic Usage
 
 1. **Execute the `loader.lua` script:**
