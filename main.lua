@@ -39,8 +39,6 @@ if syn and syn.request then -- Check for Synapse
         if type(urlOrTable) == "table" then
             return syn.request(urlOrTable).Body
         else
-             -- Synapse doesn't have a direct equivalent for simple HttpGet with caching bool?
-             -- Fallback to making a table request anyway.
             return syn.request({Url = urlOrTable, Method = "GET"}).Body
         end
     end
@@ -53,7 +51,7 @@ else -- Fallback for other executors
 end
 
 
--- Function to download files (FIXED)
+-- Function to download files
 local function downloadFile(path, func)
 	local filePath = path
 	if not isfile(filePath) then
@@ -65,12 +63,10 @@ local function downloadFile(path, func)
         print("Main: Downloading:", url)
 
         local suc, res = pcall(function()
-            -- Call httpGet correctly depending on what it resolved to
-            if syn and syn.request and httpGet == syn.request then -- Check if we are using Synapse's function
+            if syn and syn.request and httpGet == syn.request then
                  return httpGet({Url = url, Method = "GET"}) -- Use table for Synapse
             else
-                 -- Use standard (URL, Cache) signature for game.HttpGet or others
-                 return httpGet(url, true)
+                 return httpGet(url, true) -- Use standard for others
             end
         end)
 
@@ -79,7 +75,6 @@ local function downloadFile(path, func)
 			return (func or function() return nil end)(filePath)
 		end
 
-        -- Check response content for errors (like 404)
         if type(res) == 'string' and (res == '404: Not Found' or res:find("404") or res:find("Not Found")) then
             warn("Main: Failed to download (404 Not Found):", path)
             return (func or function() return nil end)(filePath)
@@ -88,7 +83,6 @@ local function downloadFile(path, func)
              return (func or function() return nil end)(filePath)
         end
 
-		-- Add watermark and save
 		if path:find('.lua') then res = '--This watermark is used to delete the file if its cached, remove it to make the file persist after Meteor updates.\n'..res end
 		local writeSuc = pcall(writefile, filePath, res)
         if writeSuc then
@@ -108,7 +102,6 @@ if not meteorClientCode or meteorClientCode == "" then error("FATAL: Failed to d
 local clientLoaderFunc = safeLoadstring(meteorClientCode, 'MeteorClient.lua')
 if not clientLoaderFunc then error("FATAL: Failed to load MeteorClient.lua code.") end
 
--- Execute to get the API table
 Meteor = clientLoaderFunc()
 if not Meteor or type(Meteor) ~= "table" then error("FATAL: MeteorClient.lua did not return API table.") end
 shared.Meteor = Meteor -- Make API globally accessible
@@ -124,16 +117,21 @@ function Meteor:Log(...)
 end
 
 function Meteor:Clean(connection)
-    if connection then table.insert(self._connections, connection) end
+    -- Add check to prevent adding nil connection
+    if connection then
+        table.insert(self._connections, connection)
+    else
+        self:Log("Warning: Attempted to clean a nil connection.")
+    end
     return connection
 end
 
--- Set initial profile name from shared var if exists
 Meteor.Profile = shared.MeteorCustomProfile or Meteor.Profile or 'default'
 
 
 ---[[ Keybind Handling (Calls API Toggle) ]]--
 local function checkKeybindPressed(input)
+    -- Added check for Meteor table existence at the start
     if not Meteor or not Meteor.Keybind or #Meteor.Keybind == 0 then return false end
     local primaryKeyPressed = false
     local modifiersRequiredDown = {}
@@ -141,41 +139,39 @@ local function checkKeybindPressed(input)
 
     for _, key in ipairs(Meteor.Keybind) do
         local keyEnum = Enum.KeyCode[key] or Enum.UserInputType[key]
-        if not keyEnum then goto continue end -- Skip invalid keys
+        if not keyEnum then goto continue end
 
         if not (key:find('Shift') or key:find('Control') or key:find('Alt')) then
-             -- Check if it's a UserInputType or KeyCode match
             if input.UserInputType == keyEnum or input.KeyCode == keyEnum then
                 primaryKeyPressed = true
-                primaryKey = keyEnum -- Store the primary key that was pressed
+                primaryKey = keyEnum
             end
         else
-            modifiersRequiredDown[keyEnum] = true -- Mark modifier as required
+            modifiersRequiredDown[keyEnum] = true
         end
         ::continue::
     end
 
-    -- If the input event wasn't the primary key press/type, it can't trigger the bind
     if not primaryKeyPressed then return false end
 
-    -- Check if all required modifier keys are currently held down
     for keyEnumMod, _ in pairs(modifiersRequiredDown) do
         if not userInputService:IsKeyDown(keyEnumMod) then
-            -- Allow trigger if the modifier itself was the *last* key pressed in the combo
-            -- This check is tricky and might need refinement for complex binds.
-            -- For simplicity, we require modifiers to be held *before* primary key.
             return false
         end
     end
-
-    return true -- Primary key pressed and all required modifiers are down
+    return true
 end
 
-
+-- Add defensive checks inside the InputBegan handler
 Meteor:Clean(userInputService.InputBegan:Connect(function(input, gameProcessed)
     if gameProcessed then return end
+
     if checkKeybindPressed(input) then
-        pcall(Meteor.ToggleGUI, Meteor) -- Call ToggleGUI from API
+        if Meteor and Meteor.ToggleGUI then
+            pcall(Meteor.ToggleGUI, Meteor)
+        else
+            warn("InputBegan: Meteor.ToggleGUI is nil!")
+        end
     end
 end))
 
@@ -183,9 +179,11 @@ end))
 ---[[ Initialization Logic (Orchestration) ]]--
 function Meteor:Init()
     self:Log("Main: Initializing...")
+    -- Check if ShowLoading exists before calling
     if self.ShowLoading then pcall(self.ShowLoading, self, "Meteor | Loading Config...") end
 
-    pcall(self.LoadConfig, self)
+    -- Check if LoadConfig exists before calling
+    if self.LoadConfig then pcall(self.LoadConfig, self) end
     task.wait(0.05)
 
     if self.ShowLoading then pcall(self.ShowLoading, self, "Meteor | Loading Modules...") end
@@ -194,7 +192,7 @@ function Meteor:Init()
     local universalCode = downloadFile('Meteor_/games/universal.lua')
     if universalCode and universalCode ~= "" then
         local universalFunc = safeLoadstring(universalCode, 'universal.lua')
-        if universalFunc then pcall(universalFunc) end
+        if universalFunc then pcall(universalFunc) end -- universalFunc might use Meteor API
     end
 
     -- Load Game-Specific Scripts
@@ -205,7 +203,7 @@ function Meteor:Init()
          local gameFunc = safeLoadstring(gameScriptCode, tostring(gameId)..'.lua')
          if gameFunc then
              if self.ShowLoading then pcall(self.ShowLoading, self, "Meteor | Loading Game Specifics ("..gameId..")...") end
-             pcall(gameFunc)
+             pcall(gameFunc) -- gameFunc might use Meteor API
          end
     end
 
@@ -214,37 +212,55 @@ function Meteor:Init()
     self:Log("Main: Finished Loading.")
     if self.HideLoading then pcall(self.HideLoading, self) end
 
-    -- Start Auto-Save Loop
+    -- Start Auto-Save Loop (with checks)
     task.spawn(function()
-        while self.Loaded and task.wait(15) do
-            pcall(self.SaveConfig, self)
+        while true do
+
+            if not Meteor or not Meteor.Loaded then break end -- Exit loop if uninjected
+            local waitDuration = 15
+
+            if Meteor.SaveConfig then
+                local suc, err = pcall(Meteor.SaveConfig, Meteor)
+                if not suc then
+                     Meteor:Log("Auto-save error:", err)
+                     waitDuration = 60 -- Wait longer after an error
+                end
+            else
+                 Meteor:Log("Auto-save skipped: Meteor.SaveConfig is nil")
+                 waitDuration = 60
+            end
+            task.wait(waitDuration)
         end
-        self:Log("Main: Auto-save loop stopped.")
+        if Meteor then Meteor:Log("Main: Auto-save loop stopped.") end
     end)
 
-    -- Teleport Handler
+    -- Teleport Handler (with checks)
     local teleportedServers = false
 	Meteor:Clean(playersService.LocalPlayer.OnTeleport:Connect(function(state)
+
+        if not Meteor then return end
+
         if state == Enum.TeleportState.Started and not teleportedServers and not shared.MeteorIndependent then
 			teleportedServers = true
-            self:Log("Main: Teleport detected.")
+            Meteor:Log("Main: Teleport detected.")
 			local teleportScript = [[
 				shared.Meteorreload = true
                 if shared.MeteorDeveloper then shared.MeteorDeveloper = true end
-                if shared.MeteorCustomProfile then shared.MeteorCustomProfile = "]]..tostring(self.Profile)..[[" end
+                if shared.MeteorCustomProfile then shared.MeteorCustomProfile = "]]..tostring(Meteor.Profile)..[[" end -- Access Profile safely
                 local commit = 'main'; local s,c = pcall(readfile,'Meteor_/profiles/commit.txt'); if s and c and c~="" then commit=c end
 				if shared.MeteorDeveloper then loadstring(readfile('Meteor_/loader.lua'),'loader')()
 				else loadstring(game:HttpGet('https://raw.githubusercontent.com/LiesInTheDarkness/MeteorForRoblox/'..commit..'/loader.lua', true),'loader')() end
 			]]
-            pcall(self.SaveConfig, self)
+			
+            if Meteor.SaveConfig then pcall(Meteor.SaveConfig, Meteor) end
 			queue_on_teleport(teleportScript)
-            pcall(self.Uninject, self)
+            if Meteor.Uninject then pcall(Meteor.Uninject, Meteor) end
 		end
 	end))
 
-    -- Initial "Finished Loading" Notification
+    -- Initial "Finished Loading" Notification (with checks)
 	if not shared.Meteorreload then
-		if self.ToggleNotifications and self.ToggleNotifications.Enabled and self.CreateNotification then -- Check toggle exists
+		if self.ToggleNotifications and self.ToggleNotifications.Enabled and self.CreateNotification then
 			pcall(self.CreateNotification, self,
                 'Meteor Loaded',
                 'Press '..table.concat(self.Keybind or {'?'}, ' + '):upper()..' to toggle.',
@@ -253,13 +269,13 @@ function Meteor:Init()
 	end
     shared.Meteorreload = false
 
-    -- Apply loaded visual states again after game scripts run
-    -- This helps if game scripts create toggles before LoadConfig could update them initially.
+    -- Apply loaded visual states again (with checks)
     task.defer(function()
-        if self.Modules then
-            for _, moduleData in pairs(self.Modules) do
-                 if moduleData._updateVisual then
-                     moduleData._updateVisual(true) -- Update visuals without tween
+
+        if Meteor and Meteor.Modules then
+            for _, moduleData in pairs(Meteor.Modules) do
+                 if moduleData and moduleData._updateVisual then -- Check moduleData exists too
+                     pcall(moduleData._updateVisual, moduleData, true)
                  end
             end
         end
@@ -269,34 +285,58 @@ end
 
 ---[[ Main Uninjection (Cleans connections, calls GUI Uninject) ]]--
 function Meteor:Uninject()
-    if not self or not self.Loaded then return end -- Prevent double/invalid uninject
-    self:Log("Main: Uninjecting...")
-    self.Loaded = false
+    -- Set Loaded false first to help stop loops/events
+    if self then self.Loaded = false end
 
-    for i = #self._connections, 1, -1 do -- Iterate backwards for safety
-        pcall(self._connections[i].Disconnect, self._connections[i])
-        table.remove(self._connections, i)
+    -- Check if self exists before logging/accessing connections
+    if not self or not self._connections then
+         print("Meteor Main: Already uninjected or invalid state.")
+         shared.Meteor = nil -- Ensure shared is cleared
+         return
+    end
+
+    self:Log("Main: Uninjecting...")
+
+    -- Disconnect connections safely
+    for i = #self._connections, 1, -1 do
+        local conn = self._connections[i]
+        if conn and conn.Connected then -- Check connection exists and is connected
+             pcall(conn.Disconnect, conn)
+        end
+        table.remove(self._connections, i) -- Remove even if disconnect failed
     end
     self._connections = {}
 
+    -- Call GUI uninject if it exists
     if self.UninjectGUI then
         pcall(self.UninjectGUI, self)
     end
 
+    -- Clear shared reference *before* local Meteor potentially becomes nil in event handlers
     shared.Meteor = nil
-    Meteor = nil -- Allow garbage collection (local var)
+    -- Note: We don't set the local 'Meteor' to nil here, as it might still be needed by callbacks finishing up.
+    -- Lua's garbage collector will handle the local variable when it's no longer referenced.
+
     print("Meteor Main: Uninjected.")
 end
 
 
 ---[[ Execution Start ]]--
-if Meteor and Meteor.ShowLoading then pcall(Meteor.ShowLoading, Meteor, "Meteor | Initializing...") end
+if Meteor and Meteor.ShowLoading then
+     pcall(Meteor.ShowLoading, Meteor, "Meteor | Initializing...")
+else
+     warn("Meteor Main: Cannot show loading screen, Meteor API not ready.")
+end
 
 if shared.MeteorIndependent then
 	if Meteor then Meteor:Log("Main: Meteor loaded in Independent Mode. Call Meteor:Init() manually.") end
 	return Meteor
 else
-	if Meteor then Meteor:Init() else error("FATAL: Meteor API failed to load before Init.") end -- Initialize immediately
+	if Meteor and Meteor.Init then
+         Meteor:Init() -- Initialize immediately
+    else
+         error("FATAL: Meteor API or Meteor:Init failed to load.")
+    end
 end
 
-return Meteor -- Return API table
+return Meteor
