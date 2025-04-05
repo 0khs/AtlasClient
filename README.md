@@ -4,7 +4,7 @@
 ## Basic Usage
 
 •  Execute the `loader.lua` script:
-    ```lua loadstring(game:HttpGet("https://raw.githubusercontent.com/LiesInTheDarkness/MeteorForRoblox/refs/heads/main/loader.lua"))():
+    ```lua loadstring(game:HttpGet("https://raw.githubusercontent.com/LiesInTheDarkness/MeteorForRoblox/refs/heads/main/loader.lua"))()
     ```
 •  The loader will handle downloading necessary files (if they don't exist or an update is found) and then execute `main.lua` to initialize the GUI.
 •  By default, press `RightShift` (or tap the top-right "Meteor" button if it appears) to open/close the GUI.
