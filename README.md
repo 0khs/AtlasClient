@@ -1,6 +1,7 @@
 # Meteor Client
 
 ![Meteor Logo](README/MeteorLogo.png)
+![Meteor Logo](README/MeteorLogoText.png)
 
 *For Roblox*
 
