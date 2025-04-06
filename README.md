@@ -1,22 +1,22 @@
-# Meteor Client
+<p align="center">
+  <img src="images/meteorlogo.png" alt="Meteor Logo" width="150" />
+  <h1 align="center" style="display:inline; margin-left: 20px;">Meteor For Roblox</h1>
+</p>
 
-![Meteor Logo](README/MeteorLogo.png)
-![Meteor Logo](README/MeteorLogoText.png)
+<p align="center">
+  <i>A Very Simple Gui and Powerful, Support Many Games.</i>
+</p>
 
-*For Roblox*
-
-## Description
-
-Meteor Client is a very simple UI library for Roblox. You can use this in any games! Just make sure your executor supports it.
+---
 
 ## Features
 
-- **Simple UI Library**: Easy to integrate and use in any Roblox game.
-- **Open Source**: Free to use and modify.
+- Easy-to-use API
+- High performance
+- Open Source
 
-## Installation
+## How To Use
 
-To use the Meteor Client in your Roblox game, execute the following Lua code:
-
+Just execute this an youre done!
 ```lua
-loadstring(game:HttpGet(""))
+loadstring(game:HttpGame("")
