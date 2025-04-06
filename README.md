@@ -3,12 +3,11 @@
 
 ## Description
 
-A very simple ui library for roblox
-
+Meteor Client is a very simple UI library for Roblox. You can use this in any games!
+Just make sure your executor support it.
 ## How To Use 
 
-execute this:
+To use the Meteor Client in your Roblox game, execute the following Lua code:
 
 ```lua
-loadstring(game:HttpGet("")
-```
+loadstring(game:HttpGet(""))
