@@ -76,7 +76,7 @@ local uipallet = {
     }, ThemeObjects = {}
 }
 
-local getcustomassets = {
+local AssetShit = {
     ['Atlas/assets/blur.png'] = 'rbxassetid://13350795660',
     ['Atlas/assets/alert.png'] = 'rbxassetid://14368301329',
     ['Atlas/assets/info.png'] = 'rbxassetid://14368324807',
@@ -85,7 +85,7 @@ local getcustomassets = {
     ['Atlas/assets/AtlasLogoText.png'] = 'rbxassetid://129311486422203'
 }
 
-local getcustomasset = getcustomasset or function(path) return getcustomassets[path] end
+local getcustomasset = getcustomasset or function(path) return AssetShit[path] end
 
 local function addBlur(parent)
     local blurEffect = Instance.new("BlurEffect")
