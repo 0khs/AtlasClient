@@ -269,7 +269,7 @@ local sidebarPadding = addPadding(sidebar, {Left=UDim.new(0,10), Right=UDim.new(
 
 local swatermark = Instance.new('ImageLabel')
 swatermark.Name = "SWatermarkLogo"
-swatermark.Image = getcustomasset('Atlas/assets/AtlasLogo.png')
+swatermark.Image = AssetShit['Atlas/assets/AtlasLogo.png']
 local logoSize = mainHeader.Size.Y.Offset * 0.8
 swatermark.Size = UDim2.fromOffset(logoSize, logoSize)
 swatermark.BackgroundTransparency = 1
@@ -334,11 +334,8 @@ local function toggleGui()
 
     if targetVisibility then
         mainframe.Visible = true
-        TweenService:Create(mainframe, uipallet.Tween, {GroupTransparency = targetTransparency}):Play()
-    else
-        TweenService:Create(mainframe, uipallet.Tween, {GroupTransparency = targetTransparency}):Play()
-        task.delay(uipallet.Tween.Time, function()
-            if mainframe.GroupTransparency == 1 then -- Check if fully faded out
+        
+    if mainframe.GroupTransparency == 1 then -- Check if fully faded out
                  mainframe.Visible = false
             end
         end)
@@ -378,3 +375,5 @@ end)
 
 
 return mainapi
+
+and
