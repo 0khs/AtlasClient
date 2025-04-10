@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="README/MeteorLogo.png" alt="Meteor Logo" width="150" />
+  <img src="README/AtlasLogo.png" alt="Meteor Logo" width="150" />
   <h1 align="center" style="display:inline; margin-left: 20px;">Meteor For Roblox</h1>
 </p>
 
