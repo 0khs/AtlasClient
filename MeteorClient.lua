@@ -371,9 +371,4 @@ gui.Destroying:Connect(function()
     end
 end)
 
-
-
-
 return mainapi
-
-and
