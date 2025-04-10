@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="README/AtlasLogo.png" alt="Atlas Client" width="150" />
+  <img src="README/AtlasText.png" alt="Atlas Client" width="150" />
   <h1 align="center" style="display:inline; margin-left: 20px;">Atlas Client For Roblox</h1>
 </p>
 
